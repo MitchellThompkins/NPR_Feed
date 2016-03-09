@@ -1,8 +1,8 @@
 {
   "uuid": "f5ec8c0d-9f21-471a-9a5c-c83320f7477d",
-  "shortName": "npr_feed",
-  "longName": "npr_feed",
-  "companyName": "MakeAwesomeHappen",
+  "shortName": "NPR Feed",
+  "longName": "NPR Feed",
+  "companyName": "Timothy Mitchell Thompkins",
   "versionLabel": "1.0",
   "sdkVersion": "3",
   "targetPlatforms": ["aplite", "basalt", "chalk"],
