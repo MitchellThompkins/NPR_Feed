@@ -10,7 +10,10 @@
     "watchface": false
   },
   "appKeys": {
-    "dummy": 0
+    "story_count": 0,
+    "story_titles": 1,
+    "story_teasers": 2,
+    "story_texts": 3
   },
   "resources": {
     "media": [
