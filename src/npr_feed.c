@@ -1,10 +1,15 @@
 #include "pebble.h"
 #include "strtok.h"
-// #include "news_list.h"
+#include "news_list.h"
+#include "externs.h"
 
 static Window *s_loading_window;
 static BitmapLayer *s_image_layer;
 static GBitmap *s_image_bitmap;
+
+int str_count;
+char **str_titles;
+char **str_teasers;
 
 const char delim[1] = "|";
 char *token;
@@ -15,8 +20,8 @@ typedef struct {
   int s_count;
   char* s_titles;
   char* s_teasers;
-} newsInfo;
-newsInfo cur_news;
+} s_newsInfo;
+s_newsInfo s_cur_news;
 
 // Keys
 typedef enum {
@@ -57,70 +62,72 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   int teasers_flag = 0;
 
   if(count_tuple) {
-    cur_news.s_count = count_tuple->value->int32;
+    s_cur_news.s_count = count_tuple->value->int32;
     count_flag = 1;
     // TMT Temp
     char s_buffer[4];
-    snprintf(s_buffer, sizeof(s_buffer), "%d", cur_news.s_count);
+    snprintf(s_buffer, sizeof(s_buffer), "%d", s_cur_news.s_count);
     APP_LOG(APP_LOG_LEVEL_DEBUG, s_buffer);
   }
 
   if(story_titles_tuple) {
-    cur_news.s_titles = story_titles_tuple->value->cstring;
+    s_cur_news.s_titles = story_titles_tuple->value->cstring;
     titles_flag = 1;
   }
 
   if(story_teasers_tuple) {
-    cur_news.s_teasers = story_teasers_tuple->value->cstring;
+    s_cur_news.s_teasers = story_teasers_tuple->value->cstring;
     teasers_flag = 1;
   }
 
   // If all data has been recieved
   if (count_flag && titles_flag && teasers_flag) {
     // Two Char arrays to store the string data
-    char *str_titles[cur_news.s_count];
-    char *str_teasers[cur_news.s_count];
+    str_count = s_cur_news.s_count;
+    str_titles = malloc(s_cur_news.s_count * sizeof(int *));
+    str_teasers = malloc(s_cur_news.s_count * sizeof(int *));
 
     // This creates a copy of the entire string s_titles into s_buffer
-    int len = strlen(cur_news.s_titles);
+    int len = strlen(s_cur_news.s_titles);
     s_buffer = (char *)malloc(len+1);
-    strcpy(s_buffer, cur_news.s_titles);
+    strcpy(s_buffer, s_cur_news.s_titles);
 
     token = strtok(s_buffer, delim); // Get the first token for the titles
     // Walk through the other tokens
     int counter = 0;
     while(token != NULL) {
-       *(str_titles + counter) = token;
-       token = strtok(NULL, delim);
-       counter++;
+      *(str_titles + counter) = malloc(strlen(token)+1);
+      *(str_titles + counter) = token;
+      token = strtok(NULL, delim);
+      counter++;
     }
 
     // This creates a copy of the entire string s_teasers into s_buffer
-    len = strlen(cur_news.s_teasers);
+    len = strlen(s_cur_news.s_teasers);
     s_buffer = (char *)realloc(s_buffer, len+1);
-    snprintf(s_buffer, len, "%s", cur_news.s_teasers);
-    strcpy(s_buffer, cur_news.str_teasers);
+    strcpy(s_buffer, s_cur_news.s_teasers);
 
     token = strtok(s_buffer, delim); // Get the first token for the teasers
     // Walk through the other tokens
     counter = 0;
     while(token != NULL) {
-       *(str_teasers + counter) = token;
-       token = strtok(NULL, delim);
-       counter++;
+      *(str_teasers + counter) = malloc(strlen(token)+1);
+      *(str_teasers + counter) = token;
+      token = strtok(NULL, delim);
+      counter++;
     }
     free(s_buffer);
 
-    // TMT This is just to visualize the data
-    // for (int i = 0; i < cur_news.s_count; i++) {
-    //   int len = strlen(*(str_titles + i));
-    //   char *s_buffer = malloc(len+1);
-    //   snprintf(s_buffer, len+1, "%s", *(str_titles + i));
-    //   APP_LOG(APP_LOG_LEVEL_DEBUG, s_buffer);
-    //   free(s_buffer);
-    // }
+    // // TMT This is just to visualize the data
+    for (int i = 0; i < s_cur_news.s_count; i++) {
+      int len = strlen(*(str_titles + i));
+      char *s_buffer = malloc(len+1);
+      snprintf(s_buffer, len+1, "%s", *(str_titles + i));
+      APP_LOG(APP_LOG_LEVEL_DEBUG, s_buffer);
+      free(s_buffer);
+    }
     //
-    // for (int i = 0; i < cur_news.s_count; i++) {
+    // for (int i = 0; i < s_cur_news.s_count; i++) {
     //   int len = strlen(*(str_teasers + i));
     //   char *s_buffer = malloc(len+1);
     //   snprintf(s_buffer, len+1, "%s", *(str_teasers + i));
@@ -128,7 +135,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     //   free(s_buffer);
     // }
 
-    // TMT here call news_list_init and pass it the two char arrays from above
+    news_list_init();
+    // free(str_titles);
+    // free(str_teasers);
   }
 
 }
