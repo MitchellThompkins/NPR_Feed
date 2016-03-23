@@ -2,7 +2,7 @@ var my_API = 'MDE4MDY0NTg0MDE0MjIzMTk3ODFlOGVhMA001';
 
 // API call definitions. 1001 = News. 1002 = Home Page News All
 var story_id_list = ["1001"];
-var num_results = 5;
+var num_results = 6;
 
 function createQuery(num_results){
 
@@ -110,6 +110,20 @@ Pebble.addEventListener('ready', function() {
 
   // Get the results from fetchNews
   dict = fetchNews();
+
+  Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+  };
+
+  // Get the size of an object
+  var size = Object.size(dict[0]);
+  console.log(size);
+  var size = Object.size(dict[1]);
+  console.log(size);
   // console.log(JSON.stringify(dict[1]));
   // Send the object
   Pebble.sendAppMessage(dict[0], function() {

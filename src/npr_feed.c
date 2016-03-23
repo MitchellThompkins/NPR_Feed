@@ -1,11 +1,12 @@
 #include "pebble.h"
+#include "inttypes.h"
 #include "strtok.h"
 #include "news_list.h"
 #include "externs.h"
 
-static Window *s_loading_window;
-static BitmapLayer *s_image_layer;
-static GBitmap *s_image_bitmap;
+static Window *loading_window;
+static BitmapLayer *image_layer;
+static GBitmap *image_bitmap;
 
 int str_count;
 char **str_titles;
@@ -36,18 +37,18 @@ static void loading_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
 
-  s_image_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOADING);
+  image_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOADING);
 
-  s_image_layer = bitmap_layer_create(bounds);
-  bitmap_layer_set_bitmap(s_image_layer, s_image_bitmap);
-  bitmap_layer_set_alignment(s_image_layer, GAlignCenter);
-  layer_add_child(window_layer, bitmap_layer_get_layer(s_image_layer));
+  image_layer = bitmap_layer_create(bounds);
+  bitmap_layer_set_bitmap(image_layer, image_bitmap);
+  bitmap_layer_set_alignment(image_layer, GAlignCenter);
+  layer_add_child(window_layer, bitmap_layer_get_layer(image_layer));
 }
 
 // Unload loading window
 static void loading_window_unload(Window *window) {
-  bitmap_layer_destroy(s_image_layer);
-  gbitmap_destroy(s_image_bitmap);
+  bitmap_layer_destroy(image_layer);
+  gbitmap_destroy(image_bitmap);
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
@@ -88,30 +89,30 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     str_teasers = malloc(s_cur_news.s_count * sizeof(int *));
 
     // This creates a copy of the entire string s_titles into s_buffer
-    int len = strlen(s_cur_news.s_titles);
-    s_buffer = (char *)malloc(len+1);
+    int len = strlen(s_cur_news.s_titles) + 1;
+    s_buffer = (char *)malloc(len);
     strcpy(s_buffer, s_cur_news.s_titles);
 
     token = strtok(s_buffer, delim); // Get the first token for the titles
     // Walk through the other tokens
     int counter = 0;
     while(token != NULL) {
-      *(str_titles + counter) = malloc(strlen(token)+1);
+      *(str_titles + counter) = malloc(strlen(token) + 1);
       *(str_titles + counter) = token;
       token = strtok(NULL, delim);
       counter++;
     }
 
     // This creates a copy of the entire string s_teasers into s_buffer
-    len = strlen(s_cur_news.s_teasers);
-    s_buffer = (char *)realloc(s_buffer, len+1);
+    len = strlen(s_cur_news.s_teasers) + 1;
+    s_buffer = (char *)realloc(s_buffer, len);
     strcpy(s_buffer, s_cur_news.s_teasers);
 
     token = strtok(s_buffer, delim); // Get the first token for the teasers
     // Walk through the other tokens
     counter = 0;
     while(token != NULL) {
-      *(str_teasers + counter) = malloc(strlen(token)+1);
+      *(str_teasers + counter) = malloc(strlen(token) + 1);
       *(str_teasers + counter) = token;
       token = strtok(NULL, delim);
       counter++;
@@ -119,23 +120,23 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     free(s_buffer);
 
     // // TMT This is just to visualize the data
-    for (int i = 0; i < s_cur_news.s_count; i++) {
-      int len = strlen(*(str_titles + i));
-      char *s_buffer = malloc(len+1);
-      snprintf(s_buffer, len+1, "%s", *(str_titles + i));
-      APP_LOG(APP_LOG_LEVEL_DEBUG, s_buffer);
-      free(s_buffer);
-    }
-    //
     // for (int i = 0; i < s_cur_news.s_count; i++) {
-    //   int len = strlen(*(str_teasers + i));
+    //   int len = strlen(*(str_titles + i));
     //   char *s_buffer = malloc(len+1);
-    //   snprintf(s_buffer, len+1, "%s", *(str_teasers + i));
+    //   snprintf(s_buffer, len+1, "%s", *(str_titles + i));
     //   APP_LOG(APP_LOG_LEVEL_DEBUG, s_buffer);
     //   free(s_buffer);
     // }
-
-    news_list_init();
+    //
+    for (int i = 0; i < s_cur_news.s_count; i++) {
+      int len = strlen(*(str_teasers + i)) + 1;
+      char *s_buffer = malloc(len);
+      snprintf(s_buffer, len, "%s", *(str_teasers + i));
+      APP_LOG(APP_LOG_LEVEL_DEBUG, s_buffer);
+      free(s_buffer);
+    }
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Heap bytes (free: %d, used: %d)", heap_bytes_free(), heap_bytes_used());
+    news_list_window_init(loading_window);
     // free(str_titles);
     // free(str_teasers);
   }
@@ -153,20 +154,21 @@ static void init(void) {
   app_message_register_inbox_dropped(in_dropped_handler);
 
   // app_message_open(64, 64); // TMT may need to increase size
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  app_message_open(5024,5024);
+  // APP_LOG(APP_LOG_LEVEL_DEBUG, "Heap bytes (inbox: %d, outbox: %d)", (int)app_message_inbox_size_maximum(), (int)app_message_outbox_size_maximum());
 
-  s_loading_window = window_create();
-  window_set_window_handlers(s_loading_window, (WindowHandlers) {
+  loading_window = window_create();
+  window_set_window_handlers(loading_window, (WindowHandlers) {
     .load = loading_window_load,
     .unload = loading_window_unload,
   });
 
-  window_stack_push(s_loading_window, true);
+  window_stack_push(loading_window, true);
 }
 
 // Deinit
 static void deinit() {
-  window_destroy(s_loading_window);
+  window_destroy(loading_window);
 }
 
 int main(void) {
