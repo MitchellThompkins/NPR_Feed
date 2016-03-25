@@ -1,14 +1,16 @@
 var my_API = 'MDE4MDY0NTg0MDE0MjIzMTk3ODFlOGVhMA001';
 
 // API call definitions. 1001 = News. 1002 = Home Page News All
-var story_id_list = ["1001"];
-var num_results = 6;
+var story_id_list = ["1002"];
+var num_results = 15;
+var act_num_results = 0;// Initalize to 1, increases as data is successfully accessed
 
-function createQuery(num_results){
+function createQuery(num_results) {
 
   var output_type = 'JSON';
   var fields = ['title', 'teaser', 'text'];
   var required_assets = 'text';
+
   // temp API call holders
   var story_id_string = '';
   var story_fields = '';
@@ -16,7 +18,7 @@ function createQuery(num_results){
   // mod API call to append arrays
   if (story_id_list.length > 1) {
     for (var i = 0; i < story_id_list.length; i++) {
-        story_id_string += [i] + ",";
+      story_id_string += [i] + ",";
     }
 
   } else {
@@ -25,7 +27,7 @@ function createQuery(num_results){
 
   if (fields.length > 1) {
     for (var i = 0; i < fields.length; i++) {
-        story_fields += [i] + ",";
+      story_fields += [i] + ",";
     }
 
   } else {
@@ -34,14 +36,14 @@ function createQuery(num_results){
 
   // Create URL
   var url_query = 'http://api.npr.org/query?id=' + story_id_string + '&fields=' +
-                  fields + '&requiredAssets=' + required_assets + '&output=' +
-                  output_type + '&num_results=' + num_results.toString() +
-                  '&apiKey=' + my_API;
+    fields + '&requiredAssets=' + required_assets + '&output=' +
+    output_type + '&num_results=' + num_results.toString() +
+    '&apiKey=' + my_API;
 
   return url_query
 }
 
-function fetchNews(){
+function fetchNews() {
   var url_query = createQuery(num_results); // Creates an instance of the query
 
   // temp var holders
@@ -54,30 +56,44 @@ function fetchNews(){
     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
       var response = JSON.parse(xmlhttp.responseText);
 
-      for (var i = 0; i < num_results; i++){
+      for (var i = 0; i < num_results; i++) {
 
-        var cur_story_text = "";
-        var cur_story_length = (response.list.story[i].text.paragraph).length;
+        try {
+          var cur_story_text = "";
+          var cur_story_length = (response.list.story[i].text.paragraph).length;
 
-        for (var j = 0; j < cur_story_length; j++) {
+          for (var j = 0; j < cur_story_length; j++) {
 
-          cur_text_obj = response.list.story[i].text.paragraph[j].$text;
-          if (cur_text_obj != null){
-            cur_story_text = cur_story_text + cur_text_obj  + '\n\n';
+            cur_text_obj = response.list.story[i].text.paragraph[j].$text;
+            if (cur_text_obj != null) {
+              cur_story_text = cur_story_text + cur_text_obj + '\n\n';
+            }
           }
+
+          story_texts = story_texts.concat(cur_story_text);
+          story_texts = story_texts.concat("|");
+        } catch (err) {
+          console.log("response.list.story[" + i + "] is undefined");
         }
+
         // story_titles[i] = response.list.story[i].title.$text;
-        story_titles = story_titles.concat(response.list.story[i].title.$text);
-        story_titles = story_titles.concat("|");
+        try {
+          story_titles = story_titles.concat(response.list.story[i].title.$text);
+          story_titles = story_titles.concat("|");
+          act_num_results++; // Increment if story title successfully added
+        } catch (err) {
+          console.log("response.list.story[" + i + "] is undefined");
+        }
 
-        story_teasers = story_teasers.concat(response.list.story[i].teaser.$text);
-        story_teasers = story_teasers.concat("|");
+        try {
+          story_teasers = story_teasers.concat(response.list.story[i].teaser.$text);
+          story_teasers = story_teasers.concat("|");
+        } catch (err) {
+          console.log("response.list.story[" + i + "] is undefined");
+        }
+        // story_texts = story_texts.concat(response.list.story[i].teaser.$text);
+        // story_texts = story_texts.concat("|");
 
-        story_texts = story_texts.concat(response.list.story[i].teaser.$text);
-        story_texts = story_texts.concat("|");
-
-        story_texts = story_texts.concat(cur_story_text);
-        story_texts = story_texts.concat("|");
         // This appends the null character onto the c string
         if (i == (num_results - 1)) {
           story_titles = story_titles.concat("\0");
@@ -91,7 +107,7 @@ function fetchNews(){
   xmlhttp.send(null);
 
   var dict_info = {
-    'story_count': num_results,
+    'story_count': act_num_results,
     'story_titles': story_titles,
     'story_teasers': story_teasers
   };
@@ -100,7 +116,7 @@ function fetchNews(){
     'story_texts': story_texts
   };
 
-  var dict = [dict_info,dict_texts];
+  var dict = [dict_info, dict_texts];
   return dict;
 }
 
@@ -111,25 +127,44 @@ Pebble.addEventListener('ready', function() {
   // Get the results from fetchNews
   dict = fetchNews();
 
-  Object.size = function(obj) {
-    var size = 0, key;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key)) size++;
-    }
-    return size;
-  };
+  // This is just to test
+  dict_size_0 = roughSizeOfObject(dict[0]);
+  dict_size_1 = roughSizeOfObject(dict[1]);
 
-  // Get the size of an object
-  var size = Object.size(dict[0]);
-  console.log(size);
-  var size = Object.size(dict[1]);
-  console.log(size);
-  // console.log(JSON.stringify(dict[1]));
   // Send the object
   Pebble.sendAppMessage(dict[0], function() {
-    console.log('Message sent successfully: ' + JSON.stringify(dict[0]));
+    console.log('Message sent successfully');
+    // console.log(JSON.stringify(dict[0]));
   }, function(e) {
     console.log('Message failed: ' + JSON.stringify(e));
   });
 
 });
+
+function roughSizeOfObject(object) {
+
+  var objectList = [];
+  var stack = [object];
+  var bytes = 0;
+
+  while (stack.length) {
+    var value = stack.pop();
+
+    if (typeof value === 'boolean') {
+      bytes += 4;
+    } else if (typeof value === 'string') {
+      bytes += value.length * 2;
+    } else if (typeof value === 'number') {
+      bytes += 8;
+    } else if (
+      typeof value === 'object' && objectList.indexOf(value) === -1
+    ) {
+      objectList.push(value);
+
+      for (var i in value) {
+        stack.push(value[i]);
+      }
+    }
+  }
+  return bytes;
+}

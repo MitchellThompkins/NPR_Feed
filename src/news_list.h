@@ -3,6 +3,5 @@
 
 // Public Function list
 void news_list_window_init(Window *loading_window);
-void news_list_window_deinit(void);
 
 #endif
