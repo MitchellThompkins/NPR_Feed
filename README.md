@@ -4,8 +4,8 @@ This is a watch app for the aplite pebble smartwatch. It pulls the latest 10 new
 
 ### Scrollable list of the 10 latest news updates (long titles scroll horizontally):
 
-<img src="Pictures/news_list.png" width="250">
+<img src="Pictures/News_List.png" width="250">
 
 ### Individual news title and teaser:
 
-<img src="Pictures/news_ind.png" width="250">
+<img src="Pictures/News_Ind.png" width="250">
