@@ -53,6 +53,7 @@ int titles_flag = 0;
 int teasers_flag = 0;
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
+        // TMT Include timeout
         APP_LOG(APP_LOG_LEVEL_DEBUG, "News Info Received.");
 
         Tuple *count_tuple = dict_find(iter, story_count);

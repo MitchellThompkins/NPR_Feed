@@ -40,7 +40,8 @@ function createQuery(num_results) {
     output_type + '&num_results=' + num_results.toString() +
     '&apiKey=' + my_API;
 
-  return url_query
+  console.log(url_query);
+  return url_query;
 }
 
 function fetchNews() {
