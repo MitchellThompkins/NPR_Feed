@@ -2,8 +2,10 @@ var my_API = 'MDE4MDY0NTg0MDE0MjIzMTk3ODFlOGVhMA001';
 
 // API call definitions. 1001 = News. 1002 = Home Page News All
 var story_id_list = ["1002"];
-var num_results = 15;
-var act_num_results = 0;// Initalize to 1, increases as data is successfully accessed
+var num_results = 11;
+var act_num_results = 0; // Initalize to 1, increases as data is successfully accessed
+
+var include_text = false; // Parse text or not
 
 function createQuery(num_results) {
 
@@ -37,10 +39,10 @@ function createQuery(num_results) {
   // Create URL
   var url_query = 'http://api.npr.org/query?id=' + story_id_string + '&fields=' +
     fields + '&requiredAssets=' + required_assets + '&output=' +
-    output_type + '&num_results=' + num_results.toString() +
+    output_type + '&numResults=' + num_results.toString() +
     '&apiKey=' + my_API;
 
-  console.log(url_query);
+  // console.log(url_query); // Log the url Query
   return url_query;
 }
 
@@ -59,22 +61,24 @@ function fetchNews() {
 
       for (var i = 0; i < num_results; i++) {
 
-        try {
-          var cur_story_text = "";
-          var cur_story_length = (response.list.story[i].text.paragraph).length;
+        if (include_text == true) {
+          try {
+            var cur_story_text = "";
+            var cur_story_length = (response.list.story[i].text.paragraph).length;
 
-          for (var j = 0; j < cur_story_length; j++) {
+            for (var j = 0; j < cur_story_length; j++) {
 
-            cur_text_obj = response.list.story[i].text.paragraph[j].$text;
-            if (cur_text_obj != null) {
-              cur_story_text = cur_story_text + cur_text_obj + '\n\n';
+              cur_text_obj = response.list.story[i].text.paragraph[j].$text;
+              if (cur_text_obj != null) {
+                cur_story_text = cur_story_text + cur_text_obj + '\n\n';
+              }
             }
-          }
 
-          story_texts = story_texts.concat(cur_story_text);
-          story_texts = story_texts.concat("|");
-        } catch (err) {
-          console.log("response.list.story[" + i + "] is undefined");
+            story_texts = story_texts.concat(cur_story_text);
+            story_texts = story_texts.concat("|");
+          } catch (err) {
+            console.log("response.list.story[" + i + "] is undefined");
+          }
         }
 
         // story_titles[i] = response.list.story[i].title.$text;

@@ -11,13 +11,20 @@ static void loading_window_load(Window *window);
 static void loading_window_unload(Window *window);
 static void loading_init(void);
 static void loading_deinit(void);
+static void error_window_load(Window *window);
+static void error_window_unload(Window *window);
+static void error_init(void);
+static void error_deinit(void);
 
 // Windows
 static Window *loading_window;
+static Window *error_window;
 
 // Layers
-static BitmapLayer *image_layer;
-static GBitmap *image_bitmap;
+static BitmapLayer *loading_image_layer;
+static GBitmap *loading_image_bitmap;
+static BitmapLayer *error_image_layer;
+static GBitmap *error_image_bitmap;
 
 // Delcare Variables
 int str_count;
@@ -30,6 +37,9 @@ char *token;
 
 // Temp Buffer to hold various string data
 char *s_buffer;
+
+// Load failure status flag (not currently used 4/7/2016)
+int load_failure = 0;
 
 // Struct to temporarly hold recieved data
 typedef struct {
@@ -76,7 +86,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
         }
 
         // If all data has been recieved
-        if (count_flag && titles_flag && teasers_flag) {
+        if ((count_flag && titles_flag && teasers_flag) && ~(load_failure)) {
                 // Two Char arrays to store the string data
                 str_count = s_cur_news.s_count;
                 str_titles = malloc(s_cur_news.s_count * sizeof(char*));
@@ -120,6 +130,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 // Called if failed to properly recieve data
 static void in_dropped_handler(AppMessageResult reason, void *context) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Dropped!");
+        load_failure = 1;
+        error_init();
+        window_stack_remove(loading_window, true);
 }
 
 // Load loading window
@@ -127,18 +140,53 @@ static void loading_window_load(Window *window) {
         Layer *window_layer = window_get_root_layer(window);
         GRect bounds = layer_get_frame(window_layer);
 
-        image_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOADING);
+        loading_image_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOADING);
 
-        image_layer = bitmap_layer_create(bounds);
-        bitmap_layer_set_bitmap(image_layer, image_bitmap);
-        bitmap_layer_set_alignment(image_layer, GAlignCenter);
-        layer_add_child(window_layer, bitmap_layer_get_layer(image_layer));
+        loading_image_layer = bitmap_layer_create(bounds);
+        bitmap_layer_set_bitmap(loading_image_layer, loading_image_bitmap);
+        bitmap_layer_set_alignment(loading_image_layer, GAlignCenter);
+        layer_add_child(window_layer, bitmap_layer_get_layer(loading_image_layer));
 }
 
 // Unload loading window
 static void loading_window_unload(Window *window) {
-        bitmap_layer_destroy(image_layer);
-        gbitmap_destroy(image_bitmap);
+        bitmap_layer_destroy(loading_image_layer);
+        gbitmap_destroy(loading_image_bitmap);
+}
+
+// Load error window
+static void error_window_load(Window *window) {
+        Layer *window_layer = window_get_root_layer(window);
+        GRect bounds = layer_get_frame(window_layer);
+
+        error_image_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ERROR);
+
+        error_image_layer = bitmap_layer_create(bounds);
+        bitmap_layer_set_bitmap(error_image_layer, error_image_bitmap);
+        bitmap_layer_set_alignment(error_image_layer, GAlignCenter);
+        layer_add_child(window_layer, bitmap_layer_get_layer(error_image_layer));
+}
+
+// Unload error window
+static void error_window_unload(Window *window) {
+        bitmap_layer_destroy(error_image_layer);
+        gbitmap_destroy(error_image_bitmap);
+}
+
+// Error window Init
+static void error_init(void) {
+        error_window = window_create();
+        window_set_window_handlers(error_window, (WindowHandlers) {
+                .load = error_window_load,
+                .unload = error_window_unload,
+        });
+
+        window_stack_push(error_window, true);
+}
+
+// Error Window Deinit
+static void error_deinit(void) {
+        window_destroy(error_window);
 }
 
 // loading Init

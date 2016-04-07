@@ -144,7 +144,7 @@ void news_list_window_init(Window *loading_window) {
 
 // News List Deinit
 static void news_list_window_deinit(void) {
-        window_destroy(news_list_window); // Remove Loading window so user exits pebble app
+        window_destroy(news_list_window); 
         window_stack_pop_all(true); // Destroy all window
 }
 

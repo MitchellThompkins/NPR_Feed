@@ -5,7 +5,7 @@
   "companyName": "Timothy Mitchell Thompkins",
   "versionLabel": "1.0",
   "sdkVersion": "3",
-  "targetPlatforms": ["aplite", "basalt", "chalk"],
+  "targetPlatforms": ["aplite", "basalt"],
   "watchapp": {
     "watchface": false
   },
@@ -16,23 +16,24 @@
     "story_texts": 3
   },
   "resources": {
-    "media": [
-      {
-       "menuIcon": true,
-       "type": "png",
-       "name": "IMAGE_MENU_ICON",
-       "file": "images/app_icon.png"
-     },
-      {
-        "type": "png",
-        "name": "IMAGE_LOADING",
-        "file": "images/loading.png"
-      }
-    ]
+    "media": [{
+      "menuIcon": true,
+      "type": "png",
+      "name": "IMAGE_MENU_ICON",
+      "file": "images/app_icon.png"
+    }, {
+      "type": "png",
+      "name": "IMAGE_LOADING",
+      "file": "images/loading.png"
+    }, {
+      "type": "png",
+      "name": "IMAGE_ERROR",
+      "file": "images/error.png"
+    }]
   },
   "targetPlatforms": [
-  "aplite",
-  "basalt",
-  "chalk"
+    "aplite",
+    "basalt",
+    "chalk"
   ]
 }
